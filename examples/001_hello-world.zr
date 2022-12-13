@@ -1,0 +1,11 @@
+// Import the module 'io' with the namespace io::
+using "io";
+
+// Define the main function for the program.
+//         vvv It returns an integer (exit code).
+fn main(): int {
+    // Print the string!
+    io::println("Hello, World!");
+    // Exit with code 0.
+    return 0;
+}
