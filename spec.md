@@ -156,7 +156,17 @@ A "statement" says something and has no value. An "expression" returns one value
 
 For example, a declaration is a statement, while a function call is an expression.
 
-All expressions MUST be terminated with a semicolon (`;`).
+All expressions and statements at the "top level" of the current block not inside of an expression MUST end in a semicolon. Below is an example of when a semicolon is required:
+
+```
+io::println(
+  2 + 2 // not needed
+); // needed
+
+if (2 + 2 === 4) {
+  io::println("2 + 2 is 4"); // needed
+} // not needed
+```
 
 <a id="-3-3">
 
