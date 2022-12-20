@@ -21,6 +21,18 @@ The majority of the overall structure of this document was adapted from RFC 2616
   - [`2.2`](#-2-2) **Basic Rules**
   - [`2.3`](#-2-3) **Versioning This Document**
 - [`3`](#-3) **Basic Format**
+  - [`3.1`](#-3-1) **Comments**
+  - [`3.2`](#-3-2) **Statements and Expressions**
+  - [`3.3`](#-3-3) **Identifier Format**
+  - [`3.4`](#-3-4) **Program Structure**
+- [`4`](#-4) **Types**
+  - [`4.1`](#-4-1) **Primitive Types**
+    - [`4.1.1`](#-4-1-1) **Integer** (`int`)
+    - [`4.1.2`](#-4-1-2) **Unsigned Integer** (`uint`)
+    - [`4.1.3`](#-4-1-3) **Float** (`float`)
+    - [`4.1.4`](#-4-1-4) **Double** (`double`)
+    - [`4.1.5`](#-4-1-5) **String** (`string`)
+    - [`4.1.6`](#-4-1-6) **Boolean** (`bool`)
 
 <a id="-1">
 
@@ -38,7 +50,7 @@ Zirco is designed with type-safety as a first class citizen.
 
 ### `1.2` **Requirements**
 
-An implementation is considered "not compliant" if it fails to meet one or more of the MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, requirements in this specification, as described in [RFC 2119][rfc2119].
+An implementation is considered "not compliant" if it fails to meet one or more of the MUST, MUST NOT, REQUIRED, SHALL, or SHALL NOT requirements in this specification, as described in [RFC 2119][rfc2119].
 
 <a id="-1-3">
 
@@ -86,6 +98,7 @@ cr      = %x0D          ; carriage return
 newline = [cr] lf       ; LF or CRLF
 sp      = %x20          ; space
 ht      = %x09          ; horizontal tab
+<">     = %x22          ; double quote
 ```
 
 To describe LWS (linear whitespace), the following rule is used:
@@ -116,21 +129,164 @@ version = 1*DIGIT "." 1*DIGIT "." 1*DIGIT
 
 <a id="-3-1">
 
-## `3.1` **Comments**
+### `3.1` **Comments**
 
-Comments are ignored by the compiler and are not part of the program.
+Comments SHALL be ignored by the compiler and are not part of the program.
 
-They are delimited C-style, with `//` for single-line comments and `/* comment */` for multi-line comments. Block comments may be nested.
+Comments MUST be delimeted "C-style," with `//` for single-line comments and `/* comment */` for multi-line comments. Block comments may be nested.
 
 ```
 line-comment = "//" *( %x20-10FFFF ) newline
 block-comment = "/*" *( block-comment / %x20-10FFFF ) "*/"
 ```
 
-Comments may be used at any place in a program -- including to separate tokens. With that in mind, block comments count as linear whitespace as listed above.
+Comments MAY be used at any place in a program -- including to separate tokens. With that in mind, block comments MUST count as linear whitespace as listed above.
 
 ```
 LWS /= block-comment
+```
+
+<a id="-3-2">
+
+### `3.2` **Statements and Expressions**
+
+Any Zirco program consists of two main components: statements and expressions.
+
+A "statement" says something and has no value. An "expression" returns one value.
+
+For example, a declaration is a statement, while a function call is an expression.
+
+All expressions MUST be terminated with a semicolon (`;`).
+
+<a id="-3-3">
+
+### `3.3` **Identifier Format**
+
+An **identifier** is a sequence of characters that identifies a variable, function, or type.
+
+Identifiers MUST start with a letter or an underscore, and MAY contain letters, numbers, and underscores (`_`).
+
+```
+identifier = ( lchar / uchar / "_" ) *( lchar / uchar / digit / "_" )
+```
+
+<a id="-3-4">
+
+### `3.4` **Program Structure**
+
+Zirco programs MUST consist of a `main` function. This `main` function is the entry point of the program and MUST return an `int`.
+
+<a id="-4">
+
+## `4` **Types**
+
+The following section describes all types available in Zirco.
+
+<a id="-4-1">
+
+### `4.1` **Primitive Types**
+
+The following sections describe primitive types that are available in Zirco.
+
+```
+type-primitive  = type-primitive-int / type-primitive-uint / type-primitive-float /
+                     type-primitive-double / type-primitive-string / type-primitive-bool
+```
+
+<a id="-4-1-1">
+
+#### `4.1.1` **Integer** (`int`)
+
+The integer type represents a signed 32-bit integer. It is the default type for integer literals.
+
+It is represented by the exact case-sensitive word `int`.
+
+```
+type-primitive-int = %x69.6E.74 ; "int"
+value-primitive-int = [ "-" ] 1*DIGIT
+```
+
+<a id="-4-1-2">
+
+#### `4.1.2` **Unsigned Integer** (`uint`)
+
+The unsigned integer type represents an unsigned 32-bit integer. It is the default type for integer literals with a leading `0x` or `0b`.
+
+It is represented by the exact case-sensitive word `uint`.
+
+```
+type-primitive-uint = %x75.69.6E.74 ; "uint"
+hex-prefix = %x30.78 ; "0x"
+bin-prefix = %x30.62 ; "0b"
+hex-dig = digit / "a" / "b" / "c" / "d" / "e" / "f" ; 0-9 A-F a-f
+bin-dig = "0" / "1"
+hex-val = hex-prefix 1*( hex-dig )
+bin-val = bin-prefix 1*( bin-dig )
+value-primitive-uint = hex-val / bin-val / 1*DIGIT
+```
+
+<a id="-4-1-3">
+
+#### `4.1.3` **Float** (`float`)
+
+The float type represents a 32-bit floating point number. It is the default type for literals with a decimal.
+
+It is represented by the exact case-sensitive word `float`.
+
+```
+type-primitive-float = %x66.6C.6F.61.74 ; "float"
+value-primitive-float = 1*DIGIT [ "." 1*DIGIT ]
+```
+
+<a id="-4-1-4">
+
+#### `4.1.4` **Double** (`double`)
+
+The double type represents a 64-bit floating point number. It can be used in a literal by appending a trailing `f`.
+
+It is represented by the exact case-sensitive word `double`.
+
+```
+type-primitive-double = %x64.6F.75.62.6C.65 ; "double"
+value-primitive-double = 1*DIGIT [ "." 1*DIGIT ] "f"
+```
+
+<a id="-4-1-5">
+
+#### `4.1.5` **String** (`string`)
+
+The string type represents a sequence of characters. It is THE type for string literals.
+
+It is represented by the exact case-sensitive word `string`.
+
+```
+type-primitive-string = %x73.74.72.69.6E.67 ; "string"
+```
+
+Strings MUST be allocated at assignment time with their value, similar to a `char*` in C.
+
+Possible values are any sequence of characters between double quotes (`"`).
+
+```
+value-primitive-string = <"> *( %x20-21 / %x23-10FFFF ) <">
+```
+
+<a id="-4-1-6">
+
+#### `4.1.6` **Boolean** (`bool`)
+
+The boolean type represents a boolean value. It is the only type (excluding int) for boolean literals.
+
+It is represented by the exact case-sensitive word `bool`.
+
+```
+type-primitive-bool = %x62.6F.6F.6C ; "bool"
+```
+
+Possible values are `true` and `false`.
+
+```
+value-primitive-bool = %x74.72.75.65 / %x66.61.6C.73.65 ; "true" / "false"
 ```
 
 [rfc2119]: https://www.rfc-editor.org/rfc/rfc2119
