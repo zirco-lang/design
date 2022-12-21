@@ -174,10 +174,10 @@ if (2 + 2 === 4) {
 
 An **identifier** is a sequence of characters that identifies a variable, function, or type.
 
-Identifiers MUST start with a letter or an underscore, and MAY contain letters, numbers, and underscores (`_`).
+Identifiers MUST start with a letter, an underscore, or a dollar sign, and MAY contain letters, numbers, dollar signs, and underscores (`_`).
 
 ```
-identifier = ( lchar / uchar / "_" ) *( lchar / uchar / digit / "_" )
+identifier = ( char / "_" / "$" ) *( char / digit / "_" / "$" )
 ```
 
 <a id="-3-4">
@@ -212,8 +212,15 @@ The integer type represents a signed 32-bit integer. It is the default type for 
 It is represented by the exact case-sensitive word `int`.
 
 ```
-type-primitive-int = %x69.6E.74 ; "int"
-value-primitive-int = [ "-" ] 1*DIGIT
+bin-prefix          = %x30.62 ; "0b"
+hex-prefix          = %x30.78 ; "0x"
+hex-dig             = digit / "a" / "b" / "c" / "d" / "e" / "f" ; 0-9 A-F a-f
+bin-dig             = "0" / "1"
+hex-int             = hex-prefix 1*hex-dig
+bin-int             = bin-prefix 1*bin-dig
+uint                = hex-int / bin-int / 1*DIGIT
+type-primitive-int  = %x69.6E.74 ; "int"
+value-primitive-int = ["-"] uint
 ```
 
 <a id="-4-1-2">
@@ -226,13 +233,7 @@ It is represented by the exact case-sensitive word `uint`.
 
 ```
 type-primitive-uint = %x75.69.6E.74 ; "uint"
-hex-prefix = %x30.78 ; "0x"
-bin-prefix = %x30.62 ; "0b"
-hex-dig = digit / "a" / "b" / "c" / "d" / "e" / "f" ; 0-9 A-F a-f
-bin-dig = "0" / "1"
-hex-val = hex-prefix 1*( hex-dig )
-bin-val = bin-prefix 1*( bin-dig )
-value-primitive-uint = hex-val / bin-val / 1*DIGIT
+value-primitive-uint = uint ; uint defined above
 ```
 
 <a id="-4-1-3">
