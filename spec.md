@@ -25,14 +25,6 @@ The majority of the overall structure of this document was adapted from RFC 2616
   - [`3.2`](#-3-2) **Statements and Expressions**
   - [`3.3`](#-3-3) **Identifier Format**
   - [`3.4`](#-3-4) **Program Structure**
-- [`4`](#-4) **Types**
-  - [`4.1`](#-4-1) **Primitive Types**
-    - [`4.1.1`](#-4-1-1) **Integer** (`int`)
-    - [`4.1.2`](#-4-1-2) **Unsigned Integer** (`uint`)
-    - [`4.1.3`](#-4-1-3) **Float** (`float`)
-    - [`4.1.4`](#-4-1-4) **Double** (`double`)
-    - [`4.1.5`](#-4-1-5) **String** (`string`)
-    - [`4.1.6`](#-4-1-6) **Boolean** (`bool`)
 
 <a id="-1">
 
@@ -156,7 +148,7 @@ A "statement" says something and has no value. An "expression" returns one value
 
 For example, a declaration is a statement, while a function call is an expression.
 
-All expressions and statements at the "top level" of the current block not inside of an expression MUST end in a semicolon. Below is an example of when a semicolon is required:
+All expressions and statements that are within a block but not within another expression MUST be terminated by a semicolon (`;`).
 
 ```
 io::println(
@@ -184,121 +176,12 @@ identifier = ( char / "_" / "$" ) *( char / digit / "_" / "$" )
 
 ### `3.4` **Program Structure**
 
-Zirco programs MUST consist of a `main` function. This `main` function is the entry point of the program and MUST return an `int`.
-
-<a id="-4">
-
-## `4` **Types**
-
-The following section describes all types available in Zirco.
-
-<a id="-4-1">
-
-### `4.1` **Primitive Types**
-
-The following sections describe primitive types that are available in Zirco.
+Zirco programs MUST consist of a `main` function. This `main` function is the entry point of the program and MUST return an `int`. The function `main()` MUST be defined in the global scope and receives one argument of type `string[]` representing the arguments passed at the command line (equivalent to C `char **argv` and Java `String[] args`).
 
 ```
-type-primitive  = type-primitive-int / type-primitive-uint / type-primitive-float /
-                     type-primitive-double / type-primitive-string / type-primitive-bool
+fn main(string[]): int;
 ```
 
-<a id="-4-1-1">
-
-#### `4.1.1` **Integer** (`int`)
-
-The integer type represents a signed 32-bit integer. It is the default type for integer literals.
-
-It is represented by the exact case-sensitive word `int`.
-
-```
-bin-prefix          = %x30.62 ; "0b"
-hex-prefix          = %x30.78 ; "0x"
-hex-dig             = digit / "a" / "b" / "c" / "d" / "e" / "f" ; 0-9 A-F a-f
-bin-dig             = "0" / "1"
-hex-int             = hex-prefix 1*hex-dig
-bin-int             = bin-prefix 1*bin-dig
-uint                = hex-int / bin-int / 1*DIGIT
-type-primitive-int  = %x69.6E.74 ; "int"
-value-primitive-int = ["-"] uint
-```
-
-<a id="-4-1-2">
-
-#### `4.1.2` **Unsigned Integer** (`uint`)
-
-The unsigned integer type represents an unsigned 32-bit integer. It is the default type for integer literals with a leading `0x` or `0b`.
-
-It is represented by the exact case-sensitive word `uint`.
-
-```
-type-primitive-uint = %x75.69.6E.74 ; "uint"
-value-primitive-uint = uint ; uint defined above
-```
-
-<a id="-4-1-3">
-
-#### `4.1.3` **Float** (`float`)
-
-The float type represents a 32-bit floating point number. It is the default type for literals with a decimal.
-
-It is represented by the exact case-sensitive word `float`.
-
-```
-type-primitive-float = %x66.6C.6F.61.74 ; "float"
-value-primitive-float = 1*DIGIT [ "." 1*DIGIT ]
-```
-
-<a id="-4-1-4">
-
-#### `4.1.4` **Double** (`double`)
-
-The double type represents a 64-bit floating point number. It can be used in a literal by appending a trailing `f`.
-
-It is represented by the exact case-sensitive word `double`.
-
-```
-type-primitive-double = %x64.6F.75.62.6C.65 ; "double"
-value-primitive-double = 1*DIGIT [ "." 1*DIGIT ] "f"
-```
-
-<a id="-4-1-5">
-
-#### `4.1.5` **String** (`string`)
-
-The string type represents a sequence of characters. It is THE type for string literals.
-
-It is represented by the exact case-sensitive word `string`.
-
-```
-type-primitive-string = %x73.74.72.69.6E.67 ; "string"
-```
-
-Strings MUST be allocated at assignment time with their value, similar to a `char*` in C.
-
-Possible values are any sequence of characters between double quotes (`"`).
-
-```
-value-primitive-string = <"> *( %x20-21 / %x23-10FFFF ) <">
-```
-
-<a id="-4-1-6">
-
-#### `4.1.6` **Boolean** (`bool`)
-
-The boolean type represents a boolean value. It is the only type (excluding int) for boolean literals.
-
-It is represented by the exact case-sensitive word `bool`.
-
-```
-type-primitive-bool = %x62.6F.6F.6C ; "bool"
-```
-
-Possible values are `true` and `false`.
-
-```
-value-primitive-bool = %x74.72.75.65 / %x66.61.6C.73.65 ; "true" / "false"
-```
 
 [rfc2119]: https://www.rfc-editor.org/rfc/rfc2119
 [rfc2616]: https://www.rfc-editor.org/rfc/rfc2616
