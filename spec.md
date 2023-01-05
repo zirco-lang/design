@@ -69,7 +69,7 @@ All Zirco operators use the following precedence table, where lower is less:
 | 4          | Term                        | `+` `-`                      | Left-to-right |
 | 5          | Comparison                  | `<=` `<` `>` `>=`            | Left-to-right |
 | 6          | Equality                    | `==` `!=`                    | Left-to-right |
-| 7          | Logical AND/OR              | `&&` `&vert;&vert;`          | Left-to-right |
+| 7          | Logical AND/OR              | `&&` (two vertical bars that i cannot place here without breaking the table)          | Left-to-right |
 | 8          | Assignments                 | `=` `+=` `-=` `*=` `/=` `%=` | Right-to-left |
 | 9          | Comma                       | `,`                          | Left-to-right |
 
@@ -100,7 +100,7 @@ program = statement* EOF
 A statement can be one of many. It can be a declaration, control-flow keywords, or an expression-statement. 
 
 ```
-statement            = declaration / flow / expression-statement
+statement            = declaration / flow / expression-statement / block
 expression-statement = expression ";"
 ```
 
