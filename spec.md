@@ -4,185 +4,189 @@
 
 </div>
 
-This document describes the official specification for the Zirco programming language.
+This document is versioned with SemVer such that the major version represents serious language changes, minor represents features, and patch represents typos/clarifications.
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119][rfc2119].
+## Standards Used in This Document
 
-The majority of the overall structure of this document was adapted from RFC 2616 "Hypertext Transfer Protocol -- HTTP/1.1", which can be found [here][rfc2616].
+This document uses a slightly augmented form of [Backus-Naur Form](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form). The following section describes the format of a grammar:
 
-## Table of Contents
+1. Rules are described in the format `rule-name = value`.
+2. Semicolons denote comments.
+3. Rules can be referenced by name with or without the `<>` around them.
+4. Strings are case-sensitive and use `""` as delimiters.
+5. All tokens have implied word boundaries between them.
+6. Direct hexadecimal character codes can be referred to with `%xAA` where `AA` is the hexadecimal code.
+7. Multiple character codes can be described as `%xAA.BB` for `%xAA %xBB` and ranges use `%xAA-BB`.
+8. The `/` character denotes a choice between multiple options.
+9. Items may be grouped with `()`.
+10. Optional tokens are obtained by following the token with `?`
+11. Any number of a token is done by following the token with `*`.
+12. One or more of a token is done by following the token with `+`.
+13. Specific repetitions are implemented by following the token with `{MIN,MAX}`. MAX can be left empty to represent infinity. Min cannot be omitted and the comma is required.
+14. Ranges of characters can be made using `[A-B]` using RegExp-like ranges.
 
-- [`1`](#-1) **Introduction**
-  - [`1.1`](#-1-1) **Purpose**
-  - [`1.2`](#-1-2) **Requirements**
-  - [`1.3`](#-1-3) **Terminology**
-- [`2`](#-2) **Notational Conventions**
-  - [`2.1`](#-2-1) **Augmented BNF**
-  - [`2.2`](#-2-2) **Basic Rules**
-  - [`2.3`](#-2-3) **Versioning This Document**
-- [`3`](#-3) **Basic Format**
-  - [`3.1`](#-3-1) **Comments**
-  - [`3.2`](#-3-2) **Statements and Expressions**
-  - [`3.3`](#-3-3) **Identifier Format**
-  - [`3.4`](#-3-4) **Program Structure**
+## Base Rules
 
-<a id="-1">
-
-## `1` **Introduction**
-
-<a id="-1-1">
-
-### `1.1` **Purpose**
-
-Zirco is a multi-purpose multi-paradigm programming language. It is designed to be easy to learn and use, while also being powerful and flexible.
-
-Zirco is designed with type-safety as a first class citizen.
-
-<a id="-1-2">
-
-### `1.2` **Requirements**
-
-An implementation is considered "not compliant" if it fails to meet one or more of the MUST, MUST NOT, REQUIRED, SHALL, or SHALL NOT requirements in this specification, as described in [RFC 2119][rfc2119].
-
-<a id="-1-3">
-
-### `1.3` **Terminology**
-
-The following terminology is used throughout this specification:
-
-- **Program** - Any assembled collection of multiple Zirco source files
-- **Module** - A single Zirco source file
-
-<a id="-2">
-
-## `2` **Notational Conventions**
-
-<a id="-2-1">
-
-### `2.1` **Augmented BNF**
-
-The syntax of Zirco is defined using Augmented Backus-Naur Form (ABNF) as defined in [RFC 5234][rfc5234].
-
-As with [RFC 2616][rfc2616], linear whitespace is used as follows:
-
-> The grammar described by this specification is word-based. Except
-> where noted otherwise, linear white space (LWS) can be included
-> between any two adjacent words (token or quoted-string), and
-> between adjacent words and separators, without changing the
-> interpretation of a field. At least one delimiter (LWS and/or
-> separators) MUST exist between any two tokens (for the definition
-> of "token" below), since they would otherwise be interpreted as a
-> single token.
-
-<a id="-2-2">
-
-### `2.2` **Basic Rules**
-
-The following ABNF rules are used throughout this specification:
+The following rules are defined now for our convenience:
 
 ```
-lchar   = %x61-7A       ; lowercase characters 
-uchar   = %x41-5A       ; uppercase characters
-char    = lchar / uchar ; any single a-z A-Z character
-digit   = %x30-39       ; any single 0-9 character
-lf      = %x0A          ; line feed
-cr      = %x0D          ; carriage return
-newline = [cr] lf       ; LF or CRLF
-sp      = %x20          ; space
-ht      = %x09          ; horizontal tab
-<">     = %x22          ; double quote
+CR         = %x0D
+LF         = %x0A
+NEWLINE    = CR? LF
+CONTINUOUS = %x00-09 / %x0B-x0C / %x0E-10FFFF
+ALL-TEXT   = %x00-10FFFF
+WHITESPACE = " " / "\t" / NEWLINE
 ```
 
-To describe LWS (linear whitespace), the following rule is used:
+We also define `EOF` as the end of a file.
+
+## Comments
+
+In Zirco, comments may be nested. This comes with the definition of:
 
 ```
-LWS = [CRLF] 1*( SP / HT )
+line-comment  = "//" CONTINUOUS NEWLINE
+block-comment = "/*" (block-comment / ALL-TEXT) "*/"
+comment       = line-comment / block-comment
 ```
 
-Between all word tokens, `*LWS` is implied.
+All items matching `comment` are ignored.
 
-<a id="-2-3">
+## Operator Precedence
 
-### `2.3` **Versioning This Document**
+All Zirco operators use the following precedence table, where lower is less:
 
-This specification is versioned in a format similar to SemVer (Semantic Versioning) with a 3-component version identifier in the format X.Y.Z.
+| Precedence | Name                        | Tokens                       | Associativity |
+| ---------- | --------------------------- | ---------------------------- | ------------- |
+| 1          | Postfix Increment/Decrement | `++` `--`                    | Left-to-right |
+| 1          | Function call               | `()`                         | Left-to-right |
+| 1          | Array access                | `[]`                         | Left-to-right |
+| 1          | Object access               | `.`                          | Left-to-right |
+| 2          | Prefix Increment/Decrement  | `++` `--`                    | Right-to-left |
+| 2          | Unary minus                 | `-`                          | Right-to-left |
+| 2          | Logical NOT                 | `!`                          | Right-to-left |
+| 3          | Factor                      | `%` `/` `*`                  | Left-to-right |
+| 4          | Term                        | `+` `-`                      | Left-to-right |
+| 5          | Comparison                  | `<=` `<` `>` `>=`            | Left-to-right |
+| 6          | Equality                    | `==` `!=`                    | Left-to-right |
+| 7          | Logical AND/OR              | `&&` `&vert;&vert;`          | Left-to-right |
+| 8          | Assignments                 | `=` `+=` `-=` `*=` `/=` `%=` | Right-to-left |
+| 9          | Comma                       | `,`                          | Left-to-right |
 
-- **X** represents a major version or language change known to break existing programs.
-- **Y** represents a minor version or feature added to the language without a breaking change.
-- **Z** represents a "patch" -- grammatical fixes in this document.
+## Lexical Grammar
 
-```
-version = 1*DIGIT "." 1*DIGIT "." 1*DIGIT
-```
-
-<a id="-3">
-
-## `3` **Basic Format**
-
-<a id="-3-1">
-
-### `3.1` **Comments**
-
-Comments SHALL be ignored by the compiler and are not part of the program.
-
-Comments MUST be delimeted "C-style," with `//` for single-line comments and `/* comment */` for multi-line comments. Block comments may be nested.
-
-```
-line-comment = "//" *( %x20-10FFFF ) newline
-block-comment = "/*" *( block-comment / %x20-10FFFF ) "*/"
-```
-
-Comments MAY be used at any place in a program -- including to separate tokens. With that in mind, block comments MUST count as linear whitespace as listed above.
+This grammar defines things the Lexer handles with tokens.
 
 ```
-LWS /= block-comment
+DIGIT      = [0-9]ESCAPED-
+PREFIX     = "0b" / "0x"
+NUMBER     = PREFIX? DIGIT+ ("." DIGIT+)?
+ALPHA      = [a-zA-Z]
+IDENTIFIER = (ALPHA / "_") (ALPHA / DIGIT / "_")*
+STRING     = "\"" <any char except for "\"" without a "\\" prefix> "\""
+OPERATOR   = <two-character operators> / <one-character operators>
 ```
 
-<a id="-3-2">
+## Base
 
-### `3.2` **Statements and Expressions**
-
-Any Zirco program consists of two main components: statements and expressions.
-
-A "statement" says something and has no value. An "expression" returns one value.
-
-For example, a declaration is a statement, while a function call is an expression.
-
-All expressions and statements that are within a block but not within another expression MUST be terminated by a semicolon (`;`).
+A `program` is a series of statements.
 
 ```
-io::println(
-  2 + 2 // not needed
-); // needed
-
-if (2 + 2 === 4) {
-  io::println("2 + 2 is 4"); // needed
-} // not needed
+program = statement* EOF
 ```
 
-<a id="-3-3">
+## Statement Types
 
-### `3.3` **Identifier Format**
-
-An **identifier** is a sequence of characters that identifies a variable, function, or type.
-
-Identifiers MUST start with a letter, an underscore, or a dollar sign, and MAY contain letters, numbers, dollar signs, and underscores (`_`).
+A statement can be one of many. It can be a declaration, control-flow keywords, or an expression-statement. 
 
 ```
-identifier = ( char / "_" / "$" ) *( char / digit / "_" / "$" )
+statement            = declaration / flow / expression-statement
+expression-statement = expression ";"
 ```
 
-<a id="-3-4">
-
-### `3.4` **Program Structure**
-
-Zirco programs MUST consist of a `main` function. This `main` function is the entry point of the program and MUST return an `int`. The function `main()` MUST be defined in the global scope and receives one argument of type `string[]` representing the arguments passed at the command line (equivalent to C `char **argv` and Java `String[] args`).
+We'll also define blocks here to help in the future.
 
 ```
-fn main(string[]): int;
+block = "{" statement* "}"
 ```
 
+### Declarations
 
-[rfc2119]: https://www.rfc-editor.org/rfc/rfc2119
-[rfc2616]: https://www.rfc-editor.org/rfc/rfc2616
-[rfc5234]: https://www.rfc-editor.org/rfc/rfc5234
+Declarations can be declaring one of the following:
+- Functions
+- Variables
+- Classes (TODO)
+
+```
+declaration = declaration-func
+            / declaration-var
+
+; fn NAME(PARAMS): RETURNS {...}
+declaration-func = "fn" IDENTIFIER argument-declaration-list ":" IDENTIFIER func-inner
+declaration-var  = IDENTIFIER IDENTIFIER ("=" expression) ";"
+
+func-inner = "->" statement / block ; represents a shorthand function declaration or complete one
+```
+
+### Control Flow
+
+Control flow keywords are one of the following:
+- `if`
+- `return`
+- `while`
+
+```
+flow = flow-if / flow-return / flow-while
+
+flow-if     = "if" "(" expression ")" statement ("else" statement)?
+flow-return = "return" expression ";"
+flow-while  = "while" "(" expression ")" statement
+```
+
+## Expressions
+
+Now for the real stuff. Note: To prevent left-recursion, we define factors/sums/etc as a flat *list* of that type, or the thing below it.
+
+```
+expression = comma
+
+comma = assignment ("," assignment)*
+
+assignment-operators = "=" / "+=" / "-=" / "*=" / "%="
+assignment = access assignment-operators assignment / logical-andor
+
+logical-andor = equality ( ("&&" / "||") equality )*
+
+equality = comparison ( ("==" / "!=") comparison )*
+
+comparison = term ( (">=" / ">" / "<=" / "<") term )*
+
+term = factor ( ("+" / "-") factor )*
+
+factor = unary ( ("/" / "*") unary )*
+
+unary = ( "!" / "-" / "++" / "--" ) unary / secondary
+
+dot-access     = ("." IDENTIFIER)
+bracket-access = ("[" expression "]")
+access         = IDENTIFIER (dot-access / bracket-access)*
+
+call = access argument-list*
+
+secondary = call / access ("++" / "--")? / primary
+
+group = "(" expression ")"
+
+primary = primary-text / NUMBER / STRING / IDENTIFIER / group
+```
+
+## Helpers
+
+To help us with shortening rules, we can also define these:
+
+TODO: Default values for argument-declaration-list
+
+```
+argument-declaration-list = "(" (IDENTIFIER IDENTIFIER)? ("," IDENTIFIER IDENTIFIER)* ")"
+argument-list             = "(" EXPRESSION? ("," EXPRESSION)* ")"
+```
