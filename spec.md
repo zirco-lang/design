@@ -173,11 +173,16 @@ access         = IDENTIFIER (dot-access / bracket-access)*
 
 call = access argument-list*
 
-secondary = call / access ("++" / "--")? / primary
+inc-dec = "--" / "++"
+secondary = call
+    / inc-dec access
+    / access inc-dec
+    / access
 
 group = "(" expression ")"
 
 primary = primary-text / NUMBER / STRING / IDENTIFIER / group
+primary-text = "true" / "false"
 ```
 
 ## Helpers
