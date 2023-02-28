@@ -41,6 +41,7 @@ unary-operator = "!" | "~" | "-";
 postfix-expression = <postfix-expression> "[" <expression> "]"
                    | <postfix-expression> "(" <argument-list>? ")"
                    | <postfix-expression> "." <IDENTIFIER>
+                   | <postfix-expression> "::" <IDENTIFIER>
                    | <postfix-expression> "++"
                    | <postfix-expression> "--"
                    | <primary>;
