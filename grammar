@@ -4,10 +4,6 @@
 
 # Note: This document is a work-in-progress.
 
-# Note: This document only represents expressions currently.
-
-# Note: This is basically the C grammar.
-
 # Operator precedence:
 # 1. Comma
 # 2. Ternary
@@ -21,6 +17,66 @@
 # 10. Unary
 # 11. Postfix
 # 12. Primary
+
+program = <declaration-list>;
+
+declaration-list = <declaration-list> <declaration>
+                 | <declaration>;
+                 
+# See https://en.wikipedia.org/wiki/Dangling_else#Avoiding_the_conflict_in_LR_parsers for why this is necessary.
+# The ClosedStmt rule REQUIRES that an 'else' clause is used, meaning that it will attach to the inner 'if' statement.
+
+statement = <open-stmt> | <closed-stmt>;
+
+open-stmt = "if" "(" <expression> ")" <statement>
+          | "if" "(" <expression> ")" <closed-stmt> "else" <open-stmt>
+          | "while" "(" <expression> ")" <open-stmt>
+          | "for" "(" <declaration> ";" <expression> ";" <expression> ")" <open-stmt>;
+
+closed-stmt = <simple-stmt>
+            | "if" "(" <expression> ")" <closed-stmt> "else" <closed-stmt>
+            | "while" "(" <expression> ")" <closed-stmt>
+            | "for" "(" <declaration> ";" <expression> ";" <expression> ")" <closed-stmt>;
+
+simple-stmt = <expression> ";"
+            | ";"
+            | "{" <stmt-list> "}"
+            | "{" "}"
+            | <flow-stmt>
+            | <declaration>;
+
+declaration = <let-declaration> | <function-declaration>;
+
+function-declaration = "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "->" <type> "{" <stmt-list> "}"
+                     | "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "{" <stmt-list> "}"
+                     | "fn" <IDENTIFIER> "(" ")" "->" <type> "{" <stmt-list> "}"
+                     | "fn" <IDENTIFIER> "(" ")" "{" <stmt-list> "}"
+                     | "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "->" <type> "{" "}"
+                     | "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "{" "}"
+                     | "fn" <IDENTIFIER> "(" ")" "->" <type> "{" "}"
+                     | "fn" <IDENTIFIER> "(" ")" "{" "}";
+
+argument-declaration-list = <argument-declaration-list> "," <argument-declaration>
+                          | <argument-declaration>;
+
+argument-declaration = <IDENTIFIER> ":" <type>
+                     | <IDENTIFIER>;
+
+let-declaration = "let" <IDENTIFIER> ":" <type> "=" <expression> ";"
+                | "let" <IDENTIFIER> "=" <expression> ";"
+                | "let" <IDENTIFIER> ":" <type> ";"
+                | "let" <IDENTIFIER> ";";
+
+# TODO: more type stuff
+type = <IDENTIFIER>;
+
+flow-stmt = "continue" ";"
+          | "break" ";"
+          | "return" <expression> ";"
+          | "return" ";";
+
+stmt-list = <stmt-list> <statement>
+          | <statement>;
 
 expression = <expression> "," <assignment-expression>
            | <assignment-expression>;
