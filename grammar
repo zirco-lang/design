@@ -20,8 +20,7 @@
 
 program = <declaration-list>;
 
-declaration-list = <declaration-list> <declaration>
-                 | <declaration>;
+declaration-list = (<declaration>)*;
                  
 # See https://en.wikipedia.org/wiki/Dangling_else#Avoiding_the_conflict_in_LR_parsers for why this is necessary.
 # The ClosedStmt rule REQUIRES that an 'else' clause is used, meaning that it will attach to the inner 'if' statement.
@@ -40,32 +39,19 @@ closed-stmt = <simple-stmt>
 
 simple-stmt = <expression> ";"
             | ";"
-            | "{" <stmt-list> "}"
-            | "{" "}"
+            | "{" <stmt-list>? "}"
             | <flow-stmt>
             | <declaration>;
 
 declaration = <let-declaration> | <function-declaration>;
 
-function-declaration = "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "->" <type> "{" <stmt-list> "}"
-                     | "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "{" <stmt-list> "}"
-                     | "fn" <IDENTIFIER> "(" ")" "->" <type> "{" <stmt-list> "}"
-                     | "fn" <IDENTIFIER> "(" ")" "{" <stmt-list> "}"
-                     | "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "->" <type> "{" "}"
-                     | "fn" <IDENTIFIER> "(" <argument-declaration-list> ")" "{" "}"
-                     | "fn" <IDENTIFIER> "(" ")" "->" <type> "{" "}"
-                     | "fn" <IDENTIFIER> "(" ")" "{" "}";
+function-declaration = "fn" <IDENTIFIER> "(" <argument-declaration-list>? ")" ("->" <type>)? "{" <stmt-list>? "}";
 
-argument-declaration-list = <argument-declaration-list> "," <argument-declaration>
-                          | <argument-declaration>;
+argument-declaration-list = <argument-declaration> ("," <argument-declaration>)* ","?;
 
-argument-declaration = <IDENTIFIER> ":" <type>
-                     | <IDENTIFIER>;
+argument-declaration = <IDENTIFIER> (":" <type>)?;
 
-let-declaration = "let" <IDENTIFIER> ":" <type> "=" <expression> ";"
-                | "let" <IDENTIFIER> "=" <expression> ";"
-                | "let" <IDENTIFIER> ":" <type> ";"
-                | "let" <IDENTIFIER> ";";
+let-declaration = "let" <IDENTIFIER> (":" <type>)? ("=" <expression>)? ";";
 
 # TODO: more type stuff
 type = <IDENTIFIER>;
@@ -75,8 +61,7 @@ flow-stmt = "continue" ";"
           | "return" <expression> ";"
           | "return" ";";
 
-stmt-list = <stmt-list> <statement>
-          | <statement>;
+stmt-list = <statement>+;
 
 expression = <expression> "," <assignment-expression>
            | <assignment-expression>;
