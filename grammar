@@ -129,4 +129,4 @@ factor-expression = <factor-expression> "*" <unary-expression>
                   | <factor-expression> "%" <unary-expression>
                   | <unary-expression>;
 
-primary = <IDENTIFIER> | <STRING> | <NUMBER> | "(" <expression> ")";
+primary = <IDENTIFIER> | <STRING> | <NUMBER> | "true" | "false" | "(" <expression> ")";
