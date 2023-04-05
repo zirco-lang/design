@@ -51,7 +51,9 @@ argument-declaration-list = <argument-declaration> ("," <argument-declaration>)*
 
 argument-declaration = <IDENTIFIER> (":" <type>)?;
 
-let-declaration = "let" <IDENTIFIER> (":" <type>)? ("=" <expression>)? ";";
+let-declaration = "let" <single-declaration> ("," <single-declaration>)* ";";
+
+single-declaration = <IDENTIFIER> (":" <type>)? ("=" <expression>)?;
 
 # TODO: more type stuff
 type = <IDENTIFIER>;
