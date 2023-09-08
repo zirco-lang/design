@@ -6,17 +6,22 @@
 
 # Operator precedence:
 # 1. Comma
-# 2. Ternary
-# 3. Logical (AND/OR) << NOTE: Logical AND/OR are at the same level unlike C, requiring explicit parenthesis.
-# 4. Equality         << NOTE: Equality is above bitwise unlike C, so A & B == C is (A & B) == C, not requiring explicitness.
-# 5. Bitwise
-# 6. Comparison
-# 7. Bit Shift
-# 8. +-
-# 9. */%
-# 10. Unary
-# 11. Postfix
-# 12. Primary
+# 2. Assignment
+# 3. Ternary
+# 4. Logical OR
+# 5. Logical AND
+# 6. Bitwise OR
+# 7. Bitwise XOR
+# 8. Bitwise AND
+# 7. (In)Equality
+# 8. Comparison
+# 9. Bit Shift
+# 10. Addition and Subtraction
+# 11. Multiplication, Division, and Modulo
+# 12. Unary (+ and -, logical and bitwise NOT, indirection, address-of)
+# 13. Function call, array access, member access (and member access through pointer)
+# 14. Primary
+# WE HAVE NO ++ and -- OPERATORS YET.
 
 program = <declaration-list>;
 
@@ -74,41 +79,28 @@ assignment-expression = <unary-expression> <assignment-operator> <assignment-exp
 assignment-operator = "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|="
                     | "^=" | "<<=" | ">>=";
 
-unary-expression = <unary-operator> <unary-expression>
-                 | "++" <unary-expression>
-                 | "--" <unary-expression>
-                 | <postfix-expression>;
-
-unary-operator = "!" | "~" | "-";
-
-postfix-expression = <postfix-expression> "[" <expression> "]"
-                   | <postfix-expression> "(" <argument-list>? ")"
-                   | <postfix-expression> "." <IDENTIFIER>
-                   | <postfix-expression> "::" <IDENTIFIER>
-                   | <postfix-expression> "++"
-                   | <postfix-expression> "--"
-                   | <primary>;
-
-argument-list = <argument-list> "," <assignment-expression>
-              | <assignment-expression>;
-
 ternary-expression = <logical-expression> "?" <expression> ":" <ternary-expression>
                    | <logical-expression>;
 
-logical-expression = <logical-expression> <logical-operator> <equality-expression>
-                   | <equality-expression>;
+logical-expression = <logical-or>;
+logical-or = <logical-or> "||" <logical-and>
+           | <logical-and>;
 
-logical-operator = "&&" | "||";
+logical-and = <logical-and> "&&" <equality-expression>
+            | <bitwise-expression>;
 
-equality-expression = <equality-expression> <equality-operator> <bitwise-expression>
-                    | <bitwise-expression>;
+bitwise-expression = <bitwise-or>;
+bitwise-or = <bitwise-or> "|" <bitwise-xor>
+           | <bitwise-xor>;
+bitwise-xor = <bitwise-xor> "^" <bitwise-and>
+            | <bitwise-and>;
+bitwise-and = <bitwise-and> "&" <equality-expression>
+            | <equality-expression>;
+
+equality-expression = <equality-expression> <equality-operator> <comparison-expression>
+                    | <comparison-expression>;
 
 equality-operator = "==" | "!=";
-
-bitwise-expression = <bitwise-expression> <bitwise-operator> <comparison-expression>
-                   | <comparison-expression>;
-
-bitwise-operator = "|" | "&" | "^";
 
 comparison-expression = <comparison-expression> <comparison-operator> <bit-shift-expression>
                       | <bit-shift-expression>;
@@ -128,5 +120,19 @@ factor-expression = <factor-expression> "*" <unary-expression>
                   | <factor-expression> "/" <unary-expression>
                   | <factor-expression> "%" <unary-expression>
                   | <unary-expression>;
+
+unary-expression = <unary-operator> <unary-expression>
+                 | <postfix-expression>;
+
+unary-operator = "-" | "!" | "~" | "&" | "*";
+
+postfix-expression = <postfix-expression> "[" <expression> "]"
+                   | <postfix-expression> "(" <argument-list>? ")"
+                   | <postfix-expression> "." <IDENTIFIER>
+                   | <postfix-expression> "->" <IDENTIFIER>
+                   | <primary>;
+
+argument-list = <argument-list> "," <assignment-expression>
+              | <assignment-expression>;
 
 primary = <IDENTIFIER> | <STRING> | <NUMBER> | "true" | "false" | "(" <expression> ")";
